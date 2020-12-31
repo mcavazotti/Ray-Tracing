@@ -19,15 +19,17 @@ __global__ void render(float *fb, int maxX, int maxY) {
 int main(int argc, char const *argv[]){
     if( argc < 3){
         std::cerr << "Missing arguments." << std::endl
-                << "Usage: ./rayTracer <h> <w>" << std::endl;
+                << "Usage: ./rayTracer <w> <h>" << std::endl;
         exit(-1);
     }
     
     int imageWidth = atoi(argv[1]);
     int imageHeight = atoi(argv[2]);
+    int threadX = BLOCK_X;
+    int threadY = BLOCK_Y;
 
     std:: cerr << "Rendering a " << imageWidth << "x" << imageHeight << " image in "
-                << BLOCK_X << "x" << BLOCK_Y << " blocks.\n";
+                << threadX << "x" << threadY << " blocks.\n";
 
     // Allocate frame buffer
     int numPixels = imageHeight * imageWidth;
@@ -38,8 +40,8 @@ int main(int argc, char const *argv[]){
     checkCudaErrors(cudaMallocManaged((void **)&frameBuffer, frameBufferSize));
 
     // Render
-    dim3 blocks(imageWidth/BLOCK_X+1,imageHeight/BLOCK_Y+1);
-    dim3 threads(BLOCK_X,BLOCK_Y);
+    dim3 blocks(imageWidth/threadX+1,imageHeight/threadY+1);
+    dim3 threads(threadX,threadY);
 
     render<<<blocks,threads>>>(frameBuffer, imageWidth, imageHeight);
     checkCudaErrors(cudaGetLastError());
