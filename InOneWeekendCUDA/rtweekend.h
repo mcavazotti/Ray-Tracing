@@ -20,7 +20,7 @@ __host__ __device__ inline double degree_to_radian(double degrees) {
   return degrees * pi / 180;
 }
 
-__host__ __device__ inline double random_double() {
+/*__host__ __device__ inline double random_double() {
   return rand() / (double(RAND_MAX) + 1);
 }
 
@@ -32,7 +32,7 @@ __host__ __device__ inline double clamp(double x, double min, double max) {
   if (x < min) return min;
   if (x > max) return max;
   return x;
-}
+}*/
 
 // commom headers
 //#include "ray.h"

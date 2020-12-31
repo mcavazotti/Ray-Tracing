@@ -13,13 +13,13 @@ class vec3 {
   __host__ __device__ vec3() : e{0, 0, 0} {}
   __host__ __device__ vec3(double e0, double e1, double e2) : e{e0, e1, e2} {}
 
-  __host__ __device__ inline static vec3 random() {
+  /*__host__ __device__ inline static vec3 random() {
     return vec3(random_double(), random_double(), random_double());
   }
   __host__ __device__ inline static vec3 random(double min, double max) {
     return vec3(random_double(min, max), random_double(min, max),
                 random_double(min, max));
-  }
+  }*/
 
   __host__ __device__ double x() const { return e[0]; }
   __host__ __device__ double y() const { return e[1]; }
@@ -113,7 +113,7 @@ __host__ __device__ vec3 refract(const vec3 &uv, const vec3 &n,
 }
 
 __host__ __device__ inline vec3 unit_vector(vec3 v) { return v / v.length(); }
-
+/*
 __host__ __device__ vec3 random_in_unit_sphere() {
   while (true) {
     auto p = vec3::random(-1, 1);
@@ -142,7 +142,7 @@ __host__ __device__ vec3 random_in_unit_disk() {
     auto p = vec3(random_double(-1, 1), random_double(-1, 1), 0);
     if (p.length_squared() >= 1) continue;
     return p;
-  }
+  }*/
 }
 
 #endif
