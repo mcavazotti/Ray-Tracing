@@ -2,16 +2,26 @@
 #include <stdlib.h>
 #include "cuda_utils.h"
 #include "vec3.h"
+#include "ray.h"
 
-__global__ void render(vec3 *fb, int maxX, int maxY) {
+__device__ vec3 color(const ray& r){
+    vec3 unitDirection = unit_vector(r.direction());
+    float t = 0.5f*unitDirection.y() +1.0f;
+    return (1.0f-t)*vec3(1,1,1) + t*vec3(0.5,0.7,1);
+}
+
+__global__ void render(vec3 *fb, int maxX, int maxY, vec3 lowerLeft, vec3 horizontal, vec3 vertical, vec3 origin) {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= maxX) || (j >= maxY)) return;
     
     int pixelIdx = j*maxX + i;
-    fb[pixelIdx][0] = float(i) / maxX;
-    fb[pixelIdx][1] = float(j) / maxY;
-    fb[pixelIdx][2] = 0.2;
+    float u = float(i) / maxX;
+    float v = float(j) / maxY;
+
+    ray r(origin,lowerLeft+u*horizontal+v*vertical);
+    fb[pixelIdx] = color(r);
+    
     
      
 }
@@ -44,7 +54,11 @@ int main(int argc, char const *argv[]){
     dim3 blocks(imageWidth/threadX+1,imageHeight/threadY+1);
     dim3 threads(threadX,threadY);
 
-    render<<<blocks,threads>>>(frameBuffer, imageWidth, imageHeight);
+    render<<<blocks,threads>>>(frameBuffer, imageWidth, imageHeight,
+                                vec3(-2.0, -1.0, -1.0),
+                                vec3(4.0, 0.0, 0.0),
+                                vec3(0.0, 2.0, 0.0),
+                                vec3(0.0, 0.0, 0.0));
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
