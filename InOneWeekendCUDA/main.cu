@@ -4,7 +4,7 @@
 #include "vec3.h"
 #include "ray.h"
 
-__device__ vec3 color(const ray& r){
+__device__ vec3 getColor(const ray& r){
     vec3 unitDirection = unit_vector(r.direction());
     float t = 0.5f*unitDirection.y() +1.0f;
     return (1.0f-t)*vec3(1,1,1) + t*vec3(0.5,0.7,1);
@@ -20,7 +20,7 @@ __global__ void render(vec3 *fb, int maxX, int maxY, vec3 lowerLeft, vec3 horizo
     float v = float(j) / maxY;
 
     ray r(origin,lowerLeft+u*horizontal+v*vertical);
-    fb[pixelIdx] = color(r);
+    fb[pixelIdx] = getColor(r);
     
     
      
