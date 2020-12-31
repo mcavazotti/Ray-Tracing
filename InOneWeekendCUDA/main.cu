@@ -35,7 +35,7 @@ int main(int argc, char const *argv[]){
 
     float *frameBuffer;
 
-    checkCudaErrors(cudaMallocManaged(void **)&frameBuffer, frameBufferSize);
+    checkCudaErrors(cudaMallocManaged(void **)&frameBuffer, frameBufferSize));
 
     // Render
     dim3 blocks(imageWidth/BLOCK_X+1,imageHeight/BLOCK_Y+1);
