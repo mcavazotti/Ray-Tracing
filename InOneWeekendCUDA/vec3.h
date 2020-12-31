@@ -56,7 +56,7 @@ class vec3 {
   }
 
  public:
-  __host__ __device__ double e[3];
+  double e[3];
 };
 
 using point3 = vec3;  // 3D point
@@ -142,7 +142,7 @@ __host__ __device__ vec3 random_in_unit_disk() {
     auto p = vec3(random_double(-1, 1), random_double(-1, 1), 0);
     if (p.length_squared() >= 1) continue;
     return p;
-  }*/
 }
+  }*/
 
 #endif
