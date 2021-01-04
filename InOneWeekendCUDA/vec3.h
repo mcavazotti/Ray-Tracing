@@ -70,8 +70,8 @@ class vec3 {
   float e[3];
 };
 
-typedef point3 vec3;  // 3D point
-typedef color vec3;   // RGB color
+typedef vec3 point3;  // 3D point
+typedef vec3 color;   // RGB color
 
 inline std::ostream &operator<<(std::ostream &out, const vec3 &v) {
   return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
