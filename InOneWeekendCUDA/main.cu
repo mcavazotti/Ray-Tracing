@@ -13,7 +13,7 @@
 
 __global__ void rand_init(curandState *randState) {
   if(threadIdx.x == 0 && blockIdx.x == 0)
-    currand_init(1998, 0 ,0, randState);
+    curand_init(1998, 0 ,0, randState);
 }
 
 __global__ void renderInit(int maxX, int maxY, curandState *randState) {
@@ -24,16 +24,16 @@ __global__ void renderInit(int maxX, int maxY, curandState *randState) {
 
   int pixelIdx = j*maxX + i;
 
-  currand_init(1998 + pixelIdx,0,0, &randState[pixelIdx]);
+  curand_init(1998 + pixelIdx,0,0, &randState[pixelIdx]);
 }
 
 __global__ void render(color *fb, int maxX, int maxY, int samples, camera **cam, hittable **world, curandState *randState) {
   int i = threadIdx.x + blockIdx.x * blockDim.x;
   int j = threadIdx.y + blockIdx.y * blockDim.y;
 
-  if((i >= max_x) || (j >= max_y)) return;
+  if((i >= maxX) || (j >= maxY)) return;
 
-  int pixelIdx = j*max_x + i;
+  int pixelIdx = j*maxX + i;
 
   curandState localRandState = randState[pixelIdx];
   color col(0,0,0);
@@ -41,7 +41,7 @@ __global__ void render(color *fb, int maxX, int maxY, int samples, camera **cam,
   for(int s = 0; s < samples; s++){
     float u = float(i + curand_uniform(&localRandState)) / float(maxX);
     float v = float(j + curand_uniform(&localRandState)) / float(maxY);
-    ray r = (*cam)->get_ray(u,y,&localRandState)
+    ray r = (*cam)->get_ray(u,v);
     col += get_color(r,world,&localRandState);
   }
 
@@ -82,23 +82,22 @@ __device__ color get_color(const ray &r, hittable **world, curandState *localRan
   return color(0,0,0);
 }
 
-#define RND (curand_uniform(&localRandState))
 __global__ void createWorld(hittable **d_list, hittable **d_world, camera **d_camera, int imgX, int imgY, curandState *currentState) {
   if(threadIdx.x == 0 && blockIdx.x == 0){
-    curandState localRandState = *randState;
+    curandState localRandState = *currentState;
 
     d_list[0] = new sphere(point3(0, -1000,-1), 1000, new lambertian(color(0.5,0.5,0.5)));
     
     int i = 1;
     for(int a = -11; a < 11; a++){
       for(int b = -1; b < 11; b++){
-        float chooseMat = RND;
-        point3 center(a+RND, 0.2, b+RND);
+        float chooseMat = random_float(&localRandState);
+        point3 center(a+random_float(&localRandState), 0.2, b+random_float(&localRandState));
 
         if(chooseMat < 0.8f)
-          d_list[i++] = new sphere(center, 0.2, new lambertian(color(RND*RND,RND*RND,RND*RND)));
+          d_list[i++] = new sphere(center, 0.2, new lambertian(color(random_float(&localRandState)*random_float(&localRandState),random_float(&localRandState)*random_float(&localRandState),random_float(&localRandState)*random_float(&localRandState))));
         else if (chooseMat <0.95f)
-          d_list[i++] = new sphere(center, 0.2, new metal(color(0.5f*(1.0f*RND),0.5f*(1.0f*RND),0.5f*(1.0f*RND)), 0.5f*RND));
+          d_list[i++] = new sphere(center, 0.2, new metal(color(0.5f*(1.0f*random_float(&localRandState)),0.5f*(1.0f*random_float(&localRandState)),0.5f*(1.0f*random_float(&localRandState))), 0.5f*random_float(&localRandState)));
         else
           d_list[i++] = new sphere(center, 0.2, new dielectric(1.5));
       }
@@ -121,7 +120,7 @@ __global__ void createWorld(hittable **d_list, hittable **d_world, camera **d_ca
   }
 }
 
-__global__ void freeWorld(hitable **d_list, hitable **d_world, camera **d_camera) {
+__global__ void freeWorld(hittable **d_list, hittable **d_world, camera **d_camera) {
     for(int i=0; i < 22*22+1+3; i++) {
         delete ((sphere *)d_list[i])->mat_ptr;
         delete d_list[i];

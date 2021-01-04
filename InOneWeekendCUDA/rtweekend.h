@@ -3,10 +3,10 @@
 
 #include <curand_kernel.h>
 
-#include <cmath>
-#include <cstdlib>
-#include <limits>
-#include <memory>
+//#include <cmath>
+//#include <cstdlib>
+//#include <limits>
+//#include <memory>
 
 // usings
 using std::make_shared;
