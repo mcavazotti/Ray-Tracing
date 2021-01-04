@@ -28,8 +28,8 @@ class camera {
     lens_radius = aperture/2.0f;
   }
 
-  __device__ ray get_ray(float s, float t) {
-    vec3 rd = lens_radius * random_in_unit_disk();
+  __device__ ray get_ray(float s, float t, curandState *localRandState) {
+    vec3 rd = lens_radius * random_in_unit_disk(localRandState);
     vec3 offset = u*rd.x() + v*rd.y();
 
     return ray(origin + offset,

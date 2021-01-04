@@ -148,10 +148,10 @@ __host__ vec3 random_unit_vector() {
 }
 
 __device__ vec3 random_unit_vector(curandState *localRandState) {
-  float a = random_float(0, 2.0f * M_PI);
-  float z = random_float(-1, 1);
+  float a = random_float(0, 2.0f * M_PI, localRandState);
+  float z = random_float(-1, 1, localRandState);
   float r = sqrtf(1 - z * z);
-  return vec3(r * cos(a), r * sin(a), z);
+  return vec3(r * cosf(a), r * sinf(a), z);
 }
 
 __host__ vec3 random_in_hemisfere(const vec3 &normal) {

@@ -68,7 +68,7 @@ __global__ void render(color *fb, int maxX, int maxY, int samples,int recursionD
   for(int s = 0; s < samples; s++){
     float u = float(i + curand_uniform(&localRandState)) / float(maxX);
     float v = float(j + curand_uniform(&localRandState)) / float(maxY);
-    ray r = (*cam)->get_ray(u,v);
+    ray r = (*cam)->get_ray(u,v, &localRandState);
     col += get_color(r,world,recursionDepth,&localRandState);
   }
 
