@@ -87,8 +87,8 @@ __global__ void createWorld(hittable **d_list, hittable **d_world, camera **d_ca
     curandState localRandState = *currentState;
 
     d_list[0] = new sphere(point3(0, -1000,-1), 1000, new lambertian(color(0.5,0.5,0.5)));
-    /*
     int i = 1;
+    /*
     for(int a = -11; a < 11; a++){
       for(int b = -1; b < 11; b++){
         float chooseMat = random_float(&localRandState);
