@@ -27,45 +27,17 @@ __global__ void renderInit(int maxX, int maxY, curandState *randState) {
   curand_init(1998 + pixelIdx,0,0, &randState[pixelIdx]);
 }
 
-__global__ void render(color *fb, int maxX, int maxY, int samples, camera **cam, hittable **world, curandState *randState) {
-  int i = threadIdx.x + blockIdx.x * blockDim.x;
-  int j = threadIdx.y + blockIdx.y * blockDim.y;
-
-  if((i >= maxX) || (j >= maxY)) return;
-
-  int pixelIdx = j*maxX + i;
-
-  curandState localRandState = randState[pixelIdx];
-  color col(0,0,0);
-
-  for(int s = 0; s < samples; s++){
-    float u = float(i + curand_uniform(&localRandState)) / float(maxX);
-    float v = float(j + curand_uniform(&localRandState)) / float(maxY);
-    ray r = (*cam)->get_ray(u,v);
-    col += get_color(r,world,&localRandState);
-  }
-
-  randState[pixelIdx] = localRandState;
-
-  col /= float(samples);
-  col[0] = sqrt(col[0]);
-  col[1] = sqrt(col[1]);
-  col[2] = sqrt(col[2]);
-
-  fb[pixelIdx] = col;
-}
-
-__device__ color get_color(const ray &r, hittable **world, curandState *localRandState){
+__device__ color get_color(const ray &r, hittable **world, int maxRecursionDepth, curandState *localRandState){
   ray currentRay = r;
   color currentAttenuation = color(1,1,1);
 
-  for(int i = 0; i < 50; i++){
+  for(int i = 0; i < maxRecursionDepth; i++){
     hit_record rec;
     if((*world)->hit(currentRay, 0.001f, FLT_MAX, rec)){
       ray scattered;
       color attenuation;
       if(rec.mat_ptr->scatter(currentRay,rec,attenuation, scattered, localRandState)) {
-        currentAttenuation *= attenuation;
+        currentAttenuation = currentAttenuation * attenuation;
         currentRay = scattered;
       }
       else return color(0,0,0);
@@ -80,6 +52,34 @@ __device__ color get_color(const ray &r, hittable **world, curandState *localRan
   }
 
   return color(0,0,0);
+}
+
+__global__ void render(color *fb, int maxX, int maxY, int samples,int recursionDepth, camera **cam, hittable **world, curandState *randState) {
+  int i = threadIdx.x + blockIdx.x * blockDim.x;
+  int j = threadIdx.y + blockIdx.y * blockDim.y;
+
+  if((i >= maxX) || (j >= maxY)) return;
+
+  int pixelIdx = j*maxX + i;
+
+  curandState localRandState = randState[pixelIdx];
+  color col(0,0,0);
+
+  for(int s = 0; s < samples; s++){
+    float u = float(i + curand_uniform(&localRandState)) / float(maxX);
+    float v = float(j + curand_uniform(&localRandState)) / float(maxY);
+    ray r = (*cam)->get_ray(u,v);
+    col += get_color(r,world,recursionDepth,&localRandState);
+  }
+
+  randState[pixelIdx] = localRandState;
+
+  col /= float(samples);
+  col[0] = sqrtf(col[0]);
+  col[1] = sqrtf(col[1]);
+  col[2] = sqrtf(col[2]);
+
+  fb[pixelIdx] = col;
 }
 
 __global__ void createWorld(hittable **d_list, hittable **d_world, camera **d_camera, int imgX, int imgY, curandState *currentState) {
@@ -107,7 +107,7 @@ __global__ void createWorld(hittable **d_list, hittable **d_world, camera **d_ca
     d_list[i++] = new sphere(point3(-4,1,0), 1, new lambertian(color(0.4,0.2,0.1)));
     d_list[i++] = new sphere(point3(4,1,0), 1, new metal(color(0.7,0.6,0.5),0));
 
-    *randState = localRandState;
+    *currentState = localRandState;
 
     *d_world = new hittable_list(d_list, 22*22+1+3);
 
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     
-    render<<<blocks, threads>>>(frameBuffer, imageWidth, imageHeight, samplesPerPixel, d_camera, d_world, d_randState);
+    render<<<blocks, threads>>>(frameBuffer, imageWidth, imageHeight, samplesPerPixel, maxDepth, d_camera, d_world, d_randState);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     
@@ -193,22 +193,22 @@ int main(int argc, char *argv[]) {
     for (int j = imageHeight-1; j >= 0; j--) {
         for (int i = 0; i < imageWidth; i++) {
             size_t pixelIdx = j*imageWidth + i;
-            int ir = int(255.99*fb[pixelIdx].r());
-            int ig = int(255.99*fb[pixelIdx].g());
-            int ib = int(255.99*fb[pixelIdx].b());
+            int ir = int(255.99*frameBuffer[pixelIdx].r());
+            int ig = int(255.99*frameBuffer[pixelIdx].g());
+            int ib = int(255.99*frameBuffer[pixelIdx].b());
             std::cout << ir << " " << ig << " " << ib << "\n";
         }
     }
 
     checkCudaErrors(cudaDeviceSynchronize());
-    freeWorld<<<1,1>>>(d_list,d_world,d_camera);
+    freeWorld<<<1,1>>>(d_hittableList,d_world,d_camera);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(d_hittableList));
     checkCudaErrors(cudaFree(d_randState));
     checkCudaErrors(cudaFree(d_randState2));
-    checkCudaErrors(cudaFree(fb));
+    checkCudaErrors(cudaFree(frameBuffer));
 
     cudaDeviceReset();
 

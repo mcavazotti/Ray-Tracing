@@ -4,14 +4,11 @@
 #include <curand_kernel.h>
 
 //#include <cmath>
-//#include <cstdlib>
+#include <cstdlib>
 //#include <limits>
 //#include <memory>
 
 // usings
-using std::make_shared;
-using std::shared_ptr;
-using std::sqrt;
 
 // constants
 #ifndef M_PI

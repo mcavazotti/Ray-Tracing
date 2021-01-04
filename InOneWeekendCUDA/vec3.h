@@ -8,7 +8,6 @@
 
 #include "rtweekend.h"
 
-using std::sqrt;
 
 class vec3 {
  public:
@@ -60,7 +59,7 @@ class vec3 {
 
   __host__ __device__ vec3 &operator/=(const float t) { return *this *= 1 / t; }
 
-  __host__ __device__ float length() const { return sqrt(length_squared()); }
+  __host__ __device__ float length() const { return sqrtf(length_squared()); }
 
   __host__ __device__ float length_squared() const {
     return e[0] * e[0] + e[1] * e[1] + e[2] * e[2];
@@ -119,7 +118,7 @@ __host__ __device__ vec3 refract(const vec3 &uv, const vec3 &n,
                                  float etai_over_etat) {
   float cos_theta = dot(-uv, n);
   vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
-  vec3 r_out_parallel = -sqrt(fabs(1.0f - r_out_perp.length_squared())) * n;
+  vec3 r_out_parallel = -sqrtf(fabs(1.0f - r_out_perp.length_squared())) * n;
   return r_out_perp + r_out_parallel;
 }
 
@@ -151,7 +150,7 @@ __host__ vec3 random_unit_vector() {
 __device__ vec3 random_unit_vector(curandState *localRandState) {
   float a = random_float(0, 2.0f * M_PI);
   float z = random_float(-1, 1);
-  float r = sqrt(1 - z * z);
+  float r = sqrtf(1 - z * z);
   return vec3(r * cos(a), r * sin(a), z);
 }
 

@@ -66,8 +66,8 @@ class dielectric : public material {
 
     vec3 unit_direction = unit_vector(r_in.direction());
 
-    float cos_theta = fmin(dot(-unit_direction, rec.normal), 1);
-    float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
+    float cos_theta = fminf(dot(-unit_direction, rec.normal), 1);
+    float sin_theta = sqrtf(1.0 - cos_theta * cos_theta);
     if (etai_over_etat * sin_theta > 1.0f) {
       vec3 reflected = reflect(unit_direction, rec.normal);
       scattered = ray(rec.p, reflected);

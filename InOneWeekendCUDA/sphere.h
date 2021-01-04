@@ -28,7 +28,7 @@ __device__ bool sphere::hit(const ray& r, float t_min, float t_max,
   float discriminant = half_b * half_b - a * c;
 
   if (discriminant > 0.f) {
-    float root = sqrt(discriminant);
+    float root = sqrtf(discriminant);
     float tmp = (-half_b - root) / a;
     if (tmp < t_max && tmp > t_min) {
       rec.t = tmp;
