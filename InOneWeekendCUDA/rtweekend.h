@@ -1,6 +1,8 @@
 #ifndef RTWEEKEND_H
 #define RTWEEKEND_H
 
+#include <curand_kernel.h>
+
 #include <cmath>
 #include <cstdlib>
 #include <limits>
@@ -12,29 +14,37 @@ using std::shared_ptr;
 using std::sqrt;
 
 // constants
-const double infinity = std::numeric_limits<double>::infinity();
-const double pi = 3.1415926535897932385;
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 // utiliy functions
-__host__ __device__ inline double degree_to_radian(double degrees) {
-  return degrees * pi / 180;
+__host__ __device__ inline float degree_to_radian(float degrees) {
+  return degrees * M_PI / 180;
 }
 
-/*__host__ __device__ inline double random_double() {
-  return rand() / (double(RAND_MAX) + 1);
+__host__ inline float random_float() { return rand() / (float(RAND_MAX) + 1); }
+
+__device__ inline float random_float(curandState *localRandState) {
+  return curand_uniform(localRandState);
 }
 
-__host__ __device__ inline double random_double(double min, double max) {
-  return min + (max - min) * random_double();
+__host__ inline float random_float(float min, float max) {
+  return min + (max - min) * random_float();
 }
 
-__host__ __device__ inline double clamp(double x, double min, double max) {
+__device__ inline float random_float(float min, float max,
+                                     curandState *localRandState) {
+  return min + (max - min) * curand_uniform(localRandState);
+}
+
+__host__ __device__ inline float clamp(float x, float min, float max) {
   if (x < min) return min;
   if (x > max) return max;
   return x;
-}*/
+}
 
 // commom headers
-//#include "ray.h"
+#include "ray.h"
 
 #endif

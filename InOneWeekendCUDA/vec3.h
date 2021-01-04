@@ -1,6 +1,8 @@
 #ifndef VEC3_H
 #define VEC3_H
 
+#include <curand_kernel.h>
+
 #include <cmath>
 #include <iostream>
 
@@ -13,13 +15,24 @@ class vec3 {
   __host__ __device__ vec3() : e{0, 0, 0} {}
   __host__ __device__ vec3(float e0, float e1, float e2) : e{e0, e1, e2} {}
 
-  /*__host__ __device__ inline static vec3 random() {
+  __host__ inline static vec3 random() {
     return vec3(random_float(), random_float(), random_float());
   }
-  __host__ __device__ inline static vec3 random(float min, float max) {
+  __device__ inline static vec3 random(curandState *localRandState) {
+    return vec3(random_float(localRandState), random_float(localRandState),
+                random_float(localRandState));
+  }
+  __host__ inline static vec3 random(float min, float max) {
     return vec3(random_float(min, max), random_float(min, max),
                 random_float(min, max));
-  }*/
+  }
+
+  __device__ inline static vec3 random(float min, float max,
+                                       curandState *localRandState) {
+    return vec3(random_float(min, max, localRandState),
+                random_float(min, max, localRandState),
+                random_float(min, max, localRandState));
+  }
 
   __host__ __device__ float x() const { return e[0]; }
   __host__ __device__ float y() const { return e[1]; }
@@ -45,9 +58,7 @@ class vec3 {
     return *this;
   }
 
-  __host__ __device__ vec3 &operator/=(const float t) {
-    return *this *= 1 / t;
-  }
+  __host__ __device__ vec3 &operator/=(const float t) { return *this *= 1 / t; }
 
   __host__ __device__ float length() const { return sqrt(length_squared()); }
 
@@ -101,48 +112,80 @@ __host__ __device__ inline vec3 cross(const vec3 &u, const vec3 &v) {
 }
 
 __host__ __device__ vec3 reflect(const vec3 &v, const vec3 &n) {
-  return v - 2 * dot(v, n) * n;
+  return v - 2.0f * dot(v, n) * n;
 }
 
 __host__ __device__ vec3 refract(const vec3 &uv, const vec3 &n,
                                  float etai_over_etat) {
-  auto cos_theta = dot(-uv, n);
+  float cos_theta = dot(-uv, n);
   vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
-  vec3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.length_squared())) * n;
+  vec3 r_out_parallel = -sqrt(fabs(1.0f - r_out_perp.length_squared())) * n;
   return r_out_perp + r_out_parallel;
 }
 
 __host__ __device__ inline vec3 unit_vector(vec3 v) { return v / v.length(); }
-/*
-__host__ __device__ vec3 random_in_unit_sphere() {
+
+__host__ vec3 random_in_unit_sphere() {
   while (true) {
-    auto p = vec3::random(-1, 1);
-    if (p.length_squared() >= 1) continue;
+    vec3 p = vec3::random(-1, 1);
+    if (p.length_squared() >= 1.0f) continue;
     return p;
   }
 }
 
-__host__ __device__ vec3 random_unit_vector() {
-  auto a = random_float(0, 2 * pi);
-  auto z = random_float(-1, 1);
-  auto r = sqrt(1 - z * z);
+__device__ vec3 random_in_unit_sphere(curandState *localRandState) {
+  while (true) {
+    vec3 p = vec3::random(-1, 1, localRandState);
+    if (p.length_squared() >= 1.0f) continue;
+    return p;
+  }
+}
+
+__host__ vec3 random_unit_vector() {
+  float a = random_float(0, 2.0f * M_PI);
+  float z = random_float(-1, 1);
+  float r = sqrt(1 - z * z);
   return vec3(r * cos(a), r * sin(a), z);
 }
 
-__host__ __device__ vec3 random_in_hemisfere(const vec3 &normal) {
+__device__ vec3 random_unit_vector(curandState *localRandState) {
+  float a = random_float(0, 2.0f * M_PI);
+  float z = random_float(-1, 1);
+  float r = sqrt(1 - z * z);
+  return vec3(r * cos(a), r * sin(a), z);
+}
+
+__host__ vec3 random_in_hemisfere(const vec3 &normal) {
   vec3 in_unit_sphere = random_in_unit_sphere();
-  if (dot(in_unit_sphere, normal) > 0.0)
+  if (dot(in_unit_sphere, normal) > 0.0f)
     return in_unit_sphere;
   else
     return -in_unit_sphere;
 }
 
-__host__ __device__ vec3 random_in_unit_disk() {
+__device__ vec3 random_in_hemisfere(const vec3 &normal, curandState *localRandState) {
+  vec3 in_unit_sphere = random_in_unit_sphere(localRandState);
+  if (dot(in_unit_sphere, normal) > 0.0f)
+    return in_unit_sphere;
+  else
+    return -in_unit_sphere;
+}
+
+__host__ vec3 random_in_unit_disk() {
   while (true) {
-    auto p = vec3(random_float(-1, 1), random_float(-1, 1), 0);
+    vec3 p = vec3(random_float(-1, 1), random_float(-1, 1), 0);
     if (p.length_squared() >= 1) continue;
     return p;
+  }
 }
-  }*/
+
+__device__ vec3 random_in_unit_disk(curandState *localRandState) {
+  while (true) {
+    vec3 p = vec3(random_float(-1, 1, localRandState),
+                  random_float(-1, 1, localRandState), 0);
+    if (p.length_squared() >= 1.f) continue;
+    return p;
+  }
+}
 
 #endif

@@ -27,7 +27,7 @@ __global__ void renderInit(int maxX, int maxY, curandState *randState) {
   currand_init(1998 + pixelIdx,0,0, &randState[pixelIdx]);
 }
 
-__global__ void render(vec3 *fb, int maxX, int maxY, int samples, camera **cam, hittable **world, curandState *randState) {
+__global__ void render(color *fb, int maxX, int maxY, int samples, camera **cam, hittable **world, curandState *randState) {
   int i = threadIdx.x + blockIdx.x * blockDim.x;
   int j = threadIdx.y + blockIdx.y * blockDim.y;
 
@@ -36,7 +36,7 @@ __global__ void render(vec3 *fb, int maxX, int maxY, int samples, camera **cam, 
   int pixelIdx = j*max_x + i;
 
   curandState localRandState = randState[pixelIdx];
-  vec3 col(0,0,0);
+  color col(0,0,0);
 
   for(int s = 0; s < samples; s++){
     float u = float(i + curand_uniform(&localRandState)) / float(maxX);
@@ -55,31 +55,31 @@ __global__ void render(vec3 *fb, int maxX, int maxY, int samples, camera **cam, 
   fb[pixelIdx] = col;
 }
 
-__device__ vec3 get_color(const ray &r, hittable **world, curandState *localRandState){
+__device__ color get_color(const ray &r, hittable **world, curandState *localRandState){
   ray currentRay = r;
-  vec3 currentAttenuation = vec3(1,1,1);
+  color currentAttenuation = color(1,1,1);
 
   for(int i = 0; i < 50; i++){
     hit_record rec;
     if((*world)->hit(currentRay, 0.001f, FLT_MAX, rec)){
       ray scattered;
-      vec3 attenuation;
+      color attenuation;
       if(rec.mat_ptr->scatter(currentRay,rec,attenuation, scattered, localRandState)) {
         currentAttenuation *= attenuation;
         currentRay = scattered;
       }
-      else return vec3(0,0,0);
+      else return color(0,0,0);
     }
     else {
       vec3 unitDirection = unit_vector(currentRay.direction());
       float t = 0.5f*(unitDirection.y() +1.0f);
-      vec3 c = (1.0f-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
+      color c = (1.0f-t)*color(1.0, 1.0, 1.0) + t*color(0.5, 0.7, 1.0);
 
       return currentAttenuation * c;
     }
   }
 
-  return vec3(0,0,0);
+  return color(0,0,0);
 }
 
 #define RND (curand_uniform(&localRandState))
@@ -87,33 +87,33 @@ __global__ void createWorld(hittable **d_list, hittable **d_world, camera **d_ca
   if(threadIdx.x == 0 && blockIdx.x == 0){
     curandState localRandState = *randState;
 
-    d_list[0] = new sphere(vec3(0, -1000,-1), 1000, new lambertian(vec3(0.5,0.5,0.5)));
+    d_list[0] = new sphere(point3(0, -1000,-1), 1000, new lambertian(color(0.5,0.5,0.5)));
     
     int i = 1;
     for(int a = -11; a < 11; a++){
       for(int b = -1; b < 11; b++){
         float chooseMat = RND;
-        vec3 center(a+RND, 0.2, b+RND);
+        point3 center(a+RND, 0.2, b+RND);
 
         if(chooseMat < 0.8f)
-          d_list[i++] = new sphere(center, 0.2, new lambertian(vec3(RND*RND,RND*RND,RND*RND)));
+          d_list[i++] = new sphere(center, 0.2, new lambertian(color(RND*RND,RND*RND,RND*RND)));
         else if (chooseMat <0.95f)
-          d_list[i++] = new sphere(center, 0.2, new metal(vec3(0.5f*(1.0f*RND),0.5f*(1.0f*RND),0.5f*(1.0f*RND)), 0.5f*RND));
+          d_list[i++] = new sphere(center, 0.2, new metal(color(0.5f*(1.0f*RND),0.5f*(1.0f*RND),0.5f*(1.0f*RND)), 0.5f*RND));
         else
           d_list[i++] = new sphere(center, 0.2, new dielectric(1.5));
       }
     }
 
-    d_list[i++] = new sphere(vec3(0,1,0), 1, new dielectric(1.5));
-    d_list[i++] = new sphere(vec3(-4,1,0), 1, new lambertian(vec3(0.4,0.2,0.1)));
-    d_list[i++] = new sphere(vec3(4,1,0), 1, new metal(vec3(0.7,0.6,0.5),0));
+    d_list[i++] = new sphere(point3(0,1,0), 1, new dielectric(1.5));
+    d_list[i++] = new sphere(point3(-4,1,0), 1, new lambertian(color(0.4,0.2,0.1)));
+    d_list[i++] = new sphere(point3(4,1,0), 1, new metal(color(0.7,0.6,0.5),0));
 
     *randState = localRandState;
 
     *d_world = new hittable_list(d_list, 22*22+1+3);
 
-    vec3 lookFrom(13,2,3);
-    vec3 lookAt(0,0,0);
+    point3 lookFrom(13,2,3);
+    point3 lookAt(0,0,0);
 
     float distToFocus = (lookFrom - lookAt).length();
     float aperture = 0.1;
@@ -150,9 +150,9 @@ int main(int argc, char *argv[]) {
                 << threadX << "x" << threadY << " blocks.\n";
 
     int numPixels = imageHeight * imageWidth;
-    size_t frameBufferSize = numPixels * sizeof(vec3);
+    size_t frameBufferSize = numPixels * sizeof(color);
 
-    vec3 *frameBuffer;
+    color *frameBuffer;
     checkCudaErrors(cudaMallocManaged(void **)&frameBuffer, frameBufferSize);
 
     curandState *d_randState;
