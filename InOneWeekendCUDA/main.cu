@@ -88,9 +88,9 @@ __global__ void createWorld(hittable **d_list, hittable **d_world, camera **d_ca
 
     d_list[0] = new sphere(point3(0, -1000,-1), 1000, new lambertian(color(0.5,0.5,0.5)));
     int i = 1;
-    /*
+    
     for(int a = -11; a < 11; a++){
-      for(int b = -1; b < 11; b++){
+      for(int b = -11; b < 11; b++){
         float chooseMat = random_float(&localRandState);
         point3 center(a+random_float(&localRandState), 0.2, b+random_float(&localRandState));
 
@@ -102,15 +102,15 @@ __global__ void createWorld(hittable **d_list, hittable **d_world, camera **d_ca
           d_list[i++] = new sphere(center, 0.2, new dielectric(1.5));
       }
     }
-*/
+
     d_list[i++] = new sphere(point3(0,1,0), 1, new dielectric(1.5));
     d_list[i++] = new sphere(point3(-4,1,0), 1, new lambertian(color(0.4,0.2,0.1)));
     d_list[i++] = new sphere(point3(4,1,0), 1, new metal(color(0.7,0.6,0.5),0));
 
     *currentState = localRandState;
 
-    //*d_world = new hittable_list(d_list, 22*22+1+3);
-    *d_world = new hittable_list(d_list, 1+3);
+    *d_world = new hittable_list(d_list, 22*22+1+3);
+    //*d_world = new hittable_list(d_list, 1+3);
 
     point3 lookFrom(13,2,3);
     point3 lookAt(0,0,0);
@@ -122,8 +122,8 @@ __global__ void createWorld(hittable **d_list, hittable **d_world, camera **d_ca
 }
 
 __global__ void freeWorld(hittable **d_list, hittable **d_world, camera **d_camera) {
-    //for(int i=0; i < 22*22+1+3; i++) {
-    for(int i=0; i < 1+3; i++) {
+    for(int i=0; i < 22*22+1+3; i++) {
+    //for(int i=0; i < 1+3; i++) {
         delete ((sphere *)d_list[i])->mat_ptr;
         delete d_list[i];
     }
@@ -166,8 +166,8 @@ int main(int argc, char *argv[]) {
     checkCudaErrors(cudaDeviceSynchronize());
 
     hittable **d_hittableList;
-    //int numHittables = 22*22+1+3;
-    int numHittables = 1+3;
+    int numHittables = 22*22+1+3;
+    //int numHittables = 1+3;
     checkCudaErrors(cudaMalloc((void **)&d_hittableList, numHittables * sizeof(hittable *)));
     
     hittable **d_world;
