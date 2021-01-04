@@ -193,9 +193,9 @@ int main(int argc, char *argv[]) {
     for (int j = imageHeight-1; j >= 0; j--) {
         for (int i = 0; i < imageWidth; i++) {
             size_t pixelIdx = j*imageWidth + i;
-            int ir = int(255.99*frameBuffer[pixelIdx].r());
-            int ig = int(255.99*frameBuffer[pixelIdx].g());
-            int ib = int(255.99*frameBuffer[pixelIdx].b());
+            int ir = int(255.99*frameBuffer[pixelIdx].x());
+            int ig = int(255.99*frameBuffer[pixelIdx].y());
+            int ib = int(255.99*frameBuffer[pixelIdx].z());
             std::cout << ir << " " << ig << " " << ib << "\n";
         }
     }
