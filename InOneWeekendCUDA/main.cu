@@ -5,7 +5,7 @@
 
 #include "cuda_utils.h"
 #include "camera.h"
-#include "color.h"
+//#include "color.h"
 #include "hittable_list.h"
 #include "material.h"
 #include "rtweekend.h"
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
     size_t frameBufferSize = numPixels * sizeof(color);
 
     color *frameBuffer;
-    checkCudaErrors(cudaMallocManaged(void **)&frameBuffer, frameBufferSize);
+    checkCudaErrors(cudaMallocManaged((void **)&frameBuffer, frameBufferSize));
 
     curandState *d_randState;
     curandState *d_randState2;
