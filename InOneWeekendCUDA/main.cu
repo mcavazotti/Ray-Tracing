@@ -2,6 +2,7 @@
 #include <iostream>
 #include <curand_kernel.h>
 #include <float.h>
+#include <time.h>
 
 #include "cuda_utils.h"
 #include "camera.h"
@@ -187,9 +188,16 @@ int main(int argc, char *argv[]) {
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     
+    struct timespec start, stop;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     render<<<blocks, threads>>>(frameBuffer, imageWidth, imageHeight, samplesPerPixel, maxDepth, d_camera, d_world, d_randState);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
+    clock_gettime(CLOCK_MONOTONIC_RAW, &stop);
+    double timer_milisecs =
+      ((stop.tv_sec * 1000 * 1000 * 1000 + stop.tv_nsec) -
+       (start.tv_sec * 1000 * 1000 * 1000 + start.tv_nsec))/(1000*1000) ;
+    std::cerr << "Elapsed time " << timer_milisecs << "ms.\n";
     
     
     std::cout << "P3\n" << imageWidth << " " << imageHeight << "\n255\n";
