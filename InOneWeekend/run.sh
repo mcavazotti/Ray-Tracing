@@ -17,10 +17,10 @@ echo "set output \"./time.png\"" >> time.plg
 echo "set style data histograms" >> time.plg
 echo "plot '-' using 2:xtic(1) title ''" >> time.plg
 
-for smp in $(seq 1 $SAMPLING_FACTOR)
+for s in $(seq 1 $SIZE_FACTOR)
 do
     DATA=""
-    for s in $(seq 1 $SIZE_FACTOR)
+    for smp in $(seq 1 $SAMPLING_FACTOR)
     do
         TOTAL=0
         for r in $(seq 1 $REPETITIONS)
@@ -30,7 +30,7 @@ do
             TOTAL=$(( TOTAL + TMP ))
         done
         MEAN=`echo "scale=3; $TOTAL/$REPETITIONS" | bc -l`
+        DATA=$DATA+' '+$MEAN
+        echo "$(( 120*$s ))x$(( 80*$s ))" $DATA
     done
-    DATA=$DATA+' '+$MEAN
-    echo "$(( 120*$s ))x$(( 80*$s ))" $DATA
 done
