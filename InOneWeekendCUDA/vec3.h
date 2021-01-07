@@ -8,7 +8,6 @@
 
 #include "rtweekend.h"
 
-
 class vec3 {
  public:
   __host__ __device__ vec3() : e{0, 0, 0} {}
@@ -141,17 +140,11 @@ __device__ vec3 random_in_unit_sphere(curandState *localRandState) {
 }
 
 __host__ vec3 random_unit_vector() {
-  float a = random_float(0, 2.0f * M_PI);
-  float z = random_float(-1, 1);
-  float r = sqrt(1 - z * z);
-  return vec3(r * cos(a), r * sin(a), z);
+  return unit_vector(random_in_unit_sphere());
 }
 
 __device__ vec3 random_unit_vector(curandState *localRandState) {
-  float a = random_float(0, 2.0f * M_PI, localRandState);
-  float z = random_float(-1, 1, localRandState);
-  float r = sqrtf(1 - z * z);
-  return vec3(r * cosf(a), r * sinf(a), z);
+  return unit_vector(random_in_unit_sphere(localRandState));
 }
 
 __host__ vec3 random_in_hemisfere(const vec3 &normal) {
@@ -162,7 +155,8 @@ __host__ vec3 random_in_hemisfere(const vec3 &normal) {
     return -in_unit_sphere;
 }
 
-__device__ vec3 random_in_hemisfere(const vec3 &normal, curandState *localRandState) {
+__device__ vec3 random_in_hemisfere(const vec3 &normal,
+                                    curandState *localRandState) {
   vec3 in_unit_sphere = random_in_unit_sphere(localRandState);
   if (dot(in_unit_sphere, normal) > 0.0f)
     return in_unit_sphere;
