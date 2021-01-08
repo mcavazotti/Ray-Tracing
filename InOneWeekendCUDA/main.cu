@@ -29,7 +29,7 @@ __global__ void renderInit(int maxX, int maxY, curandState *randState) {
 }
 
 #ifdef RECURSIVE
-__device__ color get_color(const ray &r, hittable **world, int maxRecursionDepth, curandState *localRandState){
+__device__ color get_color(const ray &r, hittable **world, int depth, curandState *localRandState){
   hit_record rec;
 
   if (depth <= 0) return color(0, 0, 0);
