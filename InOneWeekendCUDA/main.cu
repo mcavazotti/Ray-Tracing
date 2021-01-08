@@ -37,7 +37,7 @@ __device__ color get_color(const ray &r, hittable **world, int depth, curandStat
   if ((*world)->hit(r, 0.001f, FLT_MAX, rec)) {
     ray scattered;
     color attenuation;
-    if (rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+    if (rec.mat_ptr->scatter(r, rec, attenuation, scattered, localRandState))
       return attenuation * get_color(scattered, world, depth - 1,localRandState);
     return color(0, 0, 0);
   }
