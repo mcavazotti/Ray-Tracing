@@ -3,7 +3,7 @@
 
 #include <curand_kernel.h>
 
-//#include <cmath>
+#include <cmath>
 #include <cstdlib>
 //#include <limits>
 //#include <memory>
@@ -14,6 +14,7 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+const float infinity = INFINITY;
 
 // utiliy functions
 __host__ __device__ inline float degree_to_radian(float degrees) {

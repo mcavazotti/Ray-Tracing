@@ -28,6 +28,25 @@ __global__ void renderInit(int maxX, int maxY, curandState *randState) {
   curand_init(1998 + pixelIdx,0,0, &randState[pixelIdx]);
 }
 
+#ifdef RECURSIVE
+__device__ color get_color(const ray &r, hittable **world, int maxRecursionDepth, curandState *localRandState){
+  hit_record rec;
+
+  if (depth <= 0) return color(0, 0, 0);
+
+  if (world.hit(r, 0.001, infinity, rec)) {
+    ray scattered;
+    color attenuation;
+    if (rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+      return attenuation * get_color(scattered, world, depth - 1,localRandState);
+    return color(0, 0, 0);
+  }
+
+  vec3 unit_direction = unit_vector(r.direction());
+  auto t = 0.5 * (unit_direction.y() + 1.0);
+  return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+}
+#else
 __device__ color get_color(const ray &r, hittable **world, int maxRecursionDepth, curandState *localRandState){
   ray currentRay = r;
   color currentAttenuation = color(1,1,1);
@@ -54,6 +73,7 @@ __device__ color get_color(const ray &r, hittable **world, int maxRecursionDepth
 
   return color(0,0,0);
 }
+#endif
 
 __global__ void render(color *fb, int maxX, int maxY, int samples,int recursionDepth, camera **cam, hittable **world, curandState *randState) {
   int i = threadIdx.x + blockIdx.x * blockDim.x;
@@ -133,11 +153,15 @@ __global__ void freeWorld(hittable **d_list, hittable **d_world, camera **d_came
 }
 
 int main(int argc, char *argv[]) {
-  if( argc < 4){
+    if( argc < 4){
         std::cerr << "Missing arguments." << std::endl
                 << "Usage: ./rayTracer <w> <h> <samples>" << std::endl;
         exit(-1);
     }
+
+    #ifdef RECURSIVE
+      std::cerr << "Running recursive RT" << std::endl;
+    #endif
     
     int imageWidth = atoi(argv[1]);
     int imageHeight = atoi(argv[2]);

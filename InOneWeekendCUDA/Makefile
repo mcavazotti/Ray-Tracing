@@ -4,7 +4,7 @@ COMP=compute_50
 CFLAGS=-gencode arch=$(COMP),code=$(ARCH) -Wno-deprecated-gpu-targets 
 
 rayTracer: main.cu *.h
-	$(CC) main.cu $(CFLAGS) -o $@
+	$(CC) main.cu $(CFLAGS) $(ARGS) -o $@
 
 clean:
 	@rm rayTracer ||:
