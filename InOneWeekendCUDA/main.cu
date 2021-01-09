@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
     int samplesPerPixel = atoi(argv[3]);
 
     float aspectRatio = imageWidth / imageHeight;
-    int maxDepth = 50;
+    int maxDepth = REC_MAX_DEPTH;
     int threadX = BLOCK_X;
     int threadY = BLOCK_Y;
 

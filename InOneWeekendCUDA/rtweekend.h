@@ -14,6 +14,10 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+
+#ifndef REC_MAX_DEPTH
+#define REC_MAX_DEPTH 50
+#endif
 const float infinity = INFINITY;
 
 // utiliy functions
