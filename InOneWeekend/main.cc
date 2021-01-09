@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
   int image_height = atoi(argv[2]);
   int samples_per_pixel = atoi(argv[3]);
   double aspect_ratio = double(image_width) / double(image_height);
-  int max_depth = 50;
+  int max_depth = REC_MAX_DEPTH;
 
   color *pixel_matrix =
       (color *)malloc(image_width * image_height * sizeof(color));
