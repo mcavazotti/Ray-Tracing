@@ -1,8 +1,8 @@
 CC=g++
-CFLAGS=-fopenmp 
+CFLAGS=-fopenmp
 
 rayTracer: main.cc *.h
-	$(CC) main.cc $(CFLAGS) -o $@
+	$(CC) main.cc $(CFLAGS) $(ARGS) -o $@
 
 clean:
 	@rm rayTracer ||:

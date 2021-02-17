@@ -6,6 +6,10 @@
 #include <limits>
 #include <memory>
 
+#ifndef REC_MAX_DEPTH
+#define REC_MAX_DEPTH 50
+#endif
+
 // usings
 using std::make_shared;
 using std::shared_ptr;
