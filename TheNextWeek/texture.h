@@ -2,52 +2,85 @@
 #define TEXTURE_H
 
 #include "rtweekend.h"
+#include "perlin.h"
 
 class texture
 {
 public:
-    virtual color value(double u, double v, const point3 &p) const = 0;
+  virtual color value(double u, double v, const point3 &p) const = 0;
 };
 
 class solid_color : public texture
 {
 public:
-    solid_color() {}
-    solid_color(color c) : color_value(c){};
+  solid_color() {}
+  solid_color(color c) : color_value(c){};
 
-    solid_color(double red, double green, double blue) : color_value(color(red, green, blue)) {}
+  solid_color(double red, double green, double blue) : color_value(color(red, green, blue)) {}
 
-    virtual color value(double u, double v, const point3 &p) const override
-    {
-        return color_value;
-    }
+  virtual color value(double u, double v, const point3 &p) const override
+  {
+    return color_value;
+  }
 
 private:
-    color color_value;
+  color color_value;
 };
 
 class checker_texture : public texture
 {
 public:
-    checker_texture() : even(make_shared<solid_color>(0, 0, 0)), odd(make_shared<solid_color>(1, 1, 1)), size(1) {}
-    checker_texture(shared_ptr<texture> _even, shared_ptr<texture> _odd) : even(_even), odd(_odd), size(1) {}
-    checker_texture(shared_ptr<texture> _even, shared_ptr<texture> _odd, double s) : even(_even), odd(_odd), size(s) {}
-    checker_texture(color c1, color c2) : even(make_shared<solid_color>(c1)), odd(make_shared<solid_color>(c2)), size(1) {}
-    checker_texture(color c1, color c2, double s) : even(make_shared<solid_color>(c1)), odd(make_shared<solid_color>(c2)), size(s) {}
+  checker_texture() : even(make_shared<solid_color>(0, 0, 0)), odd(make_shared<solid_color>(1, 1, 1)), size(1) {}
+  checker_texture(shared_ptr<texture> _even, shared_ptr<texture> _odd) : even(_even), odd(_odd), size(1) {}
+  checker_texture(shared_ptr<texture> _even, shared_ptr<texture> _odd, double s) : even(_even), odd(_odd), size(s) {}
+  checker_texture(color c1, color c2) : even(make_shared<solid_color>(c1)), odd(make_shared<solid_color>(c2)), size(1) {}
+  checker_texture(color c1, color c2, double s) : even(make_shared<solid_color>(c1)), odd(make_shared<solid_color>(c2)), size(s) {}
 
-    virtual color value(double u, double v, const point3 &p) const override
-    {
-        auto sines = sin((10 / size) * p.x()) * sin((10 / size) * p.y()) * sin((10 / size) * p.z());
-        if (sines < 0)
-            return odd->value(u, v, p);
-        else
-            return even->value(u, v, p);
-    }
+  virtual color value(double u, double v, const point3 &p) const override
+  {
+    auto sines = sin((10 / size) * p.x()) * sin((10 / size) * p.y()) * sin((10 / size) * p.z());
+    if (sines < 0)
+      return odd->value(u, v, p);
+    else
+      return even->value(u, v, p);
+  }
 
 public:
-    shared_ptr<texture> odd;
-    shared_ptr<texture> even;
-    double size;
+  shared_ptr<texture> odd;
+  shared_ptr<texture> even;
+  double size;
+};
+
+class noise_texture : public texture
+{
+public:
+  noise_texture() {}
+
+  noise_texture(double sc) : scale(sc) {}
+
+  virtual color value(double u, double v, const point3 &p) const override
+  {
+    return color(1, 1, 1) * 0.5 * (1.0 + noise.noise(scale * p));
+  }
+
+private:
+  perlin noise;
+  double scale;
+};
+
+class marble_texture : public texture {
+public:
+  marble_texture() {}
+  marble_texture(double sc) : scale(sc) {}
+
+  virtual color value(double u, double v, const point3 &p) const override
+  {
+    return color(1, 1, 1) * 0.5 * (1 + sin(scale * p.z() + 10 * noise.turb(p)));
+  }
+
+public:
+  perlin noise;
+  double scale;
 };
 
 #endif
