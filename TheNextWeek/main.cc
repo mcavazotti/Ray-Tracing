@@ -28,6 +28,9 @@ hittable_list create_scene(int scene)
   case 3:
     return two_perlin_spheres();
     break;
+  case 4:
+    return earth();
+    break;
   }
 }
 
