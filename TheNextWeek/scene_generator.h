@@ -7,6 +7,7 @@
 #include "rtweekend.h"
 #include "sphere.h"
 #include "bvh.h"
+#include "aarect.h"
 
 hittable_list random_scene()
 {
@@ -89,12 +90,45 @@ hittable_list two_perlin_spheres()
   return objects;
 }
 
-hittable_list earth() {
+hittable_list earth()
+{
   auto earth_texture = make_shared<image_texture>("../External/earthmap.jpg");
   auto earth_surface = make_shared<lambertian>(earth_texture);
-  auto globe = make_shared<sphere>(point3(0,0,0), 2, earth_surface);
+  auto globe = make_shared<sphere>(point3(0, 0, 0), 2, earth_surface);
 
   return hittable_list(globe);
 }
 
+hittable_list simple_light()
+{
+  hittable_list objects;
+
+  auto pertext = make_shared<marble_texture>(4);
+  objects.add(make_shared<sphere>(point3(0, -1000, 0), 1000, make_shared<lambertian>(pertext)));
+  objects.add(make_shared<sphere>(point3(0, 2, 0), 2, make_shared<lambertian>(pertext)));
+
+  auto difflight = make_shared<diffuse_light>(color(4, 4, 4));
+  objects.add(make_shared<xy_rect>(3, 5, 1, 3, -2, difflight));
+
+  return objects;
+}
+
+hittable_list cornell_box()
+{
+  hittable_list objects;
+  
+  auto red = make_shared<lambertian>(color(0.65, 0.05, 0.05));
+  auto white = make_shared<lambertian>(color(0.73, 0.73, 0.73));
+  auto green = make_shared<lambertian>(color(0.12, 0.45, 0.15));
+  auto light = make_shared<diffuse_light>(color(15, 15, 15));
+
+  objects.add(make_shared<yz_rect>(0, 555, 0, 555, 555, green));
+  objects.add(make_shared<yz_rect>(0, 555, 0, 555, 0, red));
+  objects.add(make_shared<xz_rect>(213, 343, 227, 332, 554, light));
+  objects.add(make_shared<xz_rect>(0, 555, 0, 555, 0, white));
+  objects.add(make_shared<xz_rect>(0, 555, 0, 555, 555, white));
+  objects.add(make_shared<xy_rect>(0, 555, 0, 555, 555, white));
+
+  return objects;
+}
 #endif

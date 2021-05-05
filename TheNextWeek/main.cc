@@ -14,7 +14,7 @@
 
 void create_scene(int scene, hittable_list &world, color &background, point3 &lookfrom, point3 &lookat, double *vfov, double *aperture)
 {
-  *vfov = 40;
+  *vfov = 10;
   *aperture = 0;
   background = color(0, 0, 0);
 
@@ -53,7 +53,18 @@ void create_scene(int scene, hittable_list &world, color &background, point3 &lo
     *vfov = 20.0;
     break;
   case 5:
+    world = simple_light();
     background = color(0, 0, 0);
+    lookfrom = point3(26, 3, 6);
+    lookat = point3(0, 2, 0);
+    *vfov = 20.0;
+    break;
+  case 6:
+    world = cornell_box();
+    background = color(0, 0, 0);
+    lookfrom = point3(278, 278, -800);
+    lookat = point3(278, 278, 0);
+    *vfov = 40.0;
     break;
   }
 }
@@ -116,14 +127,17 @@ int main(int argc, char *argv[])
   point3 lookfrom;
   point3 lookat;
   vec3 vup(0, 1, 0);
-  double dist_to_focus;
-  double aperture;
-  create_scene(scene, world, background, lookfrom, lookat, &dist_to_focus, &aperture);
+  double dist_to_focus = 10.0;
+  double aperture, vfov;
+  create_scene(scene, world, background, lookfrom, lookat, &vfov, &aperture);
 
   bvh_node world_bvh(world, 0, 1);
 
-  camera cam(lookfrom, lookat, vup, 20.0, aspect_ratio, aperture,
+  camera cam(lookfrom, lookat, vup, vfov, aspect_ratio, aperture,
              dist_to_focus);
+
+  std::cerr << "Aperture: " << aperture << "\n";
+  std::cerr << "Vertical field of View: " << vfov << "\n";
 
   // Render
   struct timespec start, stop;
