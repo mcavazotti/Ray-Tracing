@@ -12,47 +12,70 @@
 #include "sphere.h"
 #include "scene_generator.h"
 
-hittable_list create_scene(int scene)
+void create_scene(int scene, hittable_list &world, color &background, point3 &lookfrom, point3 &lookat, double *vfov, double *aperture)
 {
+  *vfov = 40;
+  *aperture = 0;
+  background = color(0, 0, 0);
+
   switch (scene)
   {
   default:
   case 1:
-    return random_scene();
+    world = random_scene();
+    background = color(0.70, 0.80, 1.00);
+    lookfrom = point3(13, 2, 3);
+    lookat = point3(0, 0, 0);
+    *vfov = 20.0;
+    *aperture = 0.1;
     break;
 
   case 2:
-    return two_spheres();
+    world = two_spheres();
+    background = color(0.70, 0.80, 1.00);
+    lookfrom = point3(13, 2, 3);
+    lookat = point3(0, 0, 0);
+    *vfov = 20.0;
     break;
 
   case 3:
-    return two_perlin_spheres();
+    world = two_perlin_spheres();
+    background = color(0.70, 0.80, 1.00);
+    lookfrom = point3(13, 2, 3);
+    lookat = point3(0, 0, 0);
+    *vfov = 20.0;
     break;
   case 4:
-    return earth();
+    world = earth();
+    background = color(0.70, 0.80, 1.00);
+    lookfrom = point3(13, 2, 3);
+    lookat = point3(0, 0, 0);
+    *vfov = 20.0;
+    break;
+  case 5:
+    background = color(0, 0, 0);
     break;
   }
 }
 
-color ray_color(const ray &r, const hittable &world, int depth)
+color ray_color(const ray &r, const color &background, const hittable &world, int depth)
 {
   hit_record rec;
 
   if (depth <= 0)
     return color(0, 0, 0);
 
-  if (world.hit(r, 0.001, infinity, rec))
-  {
-    ray scattered;
-    color attenuation;
-    if (rec.mat_ptr->scatter(r, rec, attenuation, scattered))
-      return attenuation * ray_color(scattered, world, depth - 1);
-    return color(0, 0, 0);
-  }
+  if (!world.hit(r, 0.001, infinity, rec))
+    return background;
 
-  vec3 unit_direction = unit_vector(r.direction());
-  auto t = 0.5 * (unit_direction.y() + 1.0);
-  return (1.0 - t) * color(1.0, 1.0, 1.0) + t * color(0.5, 0.7, 1.0);
+  ray scattered;
+  color attenuation;
+  color emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+
+  if (!rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+    return emitted;
+
+  return emitted + attenuation * ray_color(scattered, background, world, depth - 1);
 }
 
 int main(int argc, char *argv[])
@@ -86,18 +109,18 @@ int main(int argc, char *argv[])
   std::cout << "P3\n"
             << image_width << ' ' << image_height << "\n255\n";
 
-  // World
+  // Setup Scene
 
-  hittable_list world = create_scene(scene);
-  bvh_node world_bvh(world, 0, 1);
-
-  // Camera
-
-  point3 lookfrom(13, 2, 3);
-  point3 lookat(0, 0, 0);
+  hittable_list world;
+  color background;
+  point3 lookfrom;
+  point3 lookat;
   vec3 vup(0, 1, 0);
-  auto dist_to_focus = 10;
-  auto aperture = 0.1;
+  double dist_to_focus;
+  double aperture;
+  create_scene(scene, world, background, lookfrom, lookat, &dist_to_focus, &aperture);
+
+  bvh_node world_bvh(world, 0, 1);
 
   camera cam(lookfrom, lookat, vup, 20.0, aspect_ratio, aperture,
              dist_to_focus);
@@ -121,7 +144,7 @@ int main(int argc, char *argv[])
         auto u = (i + random_double()) / (image_width - 1);
         auto v = (j + random_double()) / (image_height - 1);
         ray r = cam.get_ray(u, v);
-        pixel_color += ray_color(r, world_bvh, max_depth);
+        pixel_color += ray_color(r, background, world_bvh, max_depth);
       }
       pixel_matrix[j * image_width + i] = pixel_color;
       // write_color(std::cout, pixel_color, samples_per_pixel);

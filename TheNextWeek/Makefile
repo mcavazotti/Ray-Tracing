@@ -6,3 +6,4 @@ rayTracer: main.cc *.h
 
 clean:
 	@rm rayTracer ||:
+	@rm *.ppm ||:
