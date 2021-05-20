@@ -66,6 +66,20 @@ void create_scene(int scene, hittable_list &world, color &background, point3 &lo
     lookat = point3(278, 278, 0);
     *vfov = 40.0;
     break;
+  case 7:
+    world = cornell_smoke();
+    lookfrom = point3(278, 278, -800);
+    lookat = point3(278, 278, 0);
+    *vfov = 40.0;
+    break;
+
+  case 8:
+    world = final_scene();
+    background = color(0, 0, 0);
+    lookfrom = point3(478, 278, -600);
+    lookat = point3(278, 278, 0);
+    *vfov = 40.0;
+    break;
   }
 }
 
